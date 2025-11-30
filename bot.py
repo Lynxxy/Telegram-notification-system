@@ -1,8 +1,7 @@
 import os
-import asyncio
-from telegram import Bot
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler
+from telegram import Bot
+from telegram.ext import Application, MessageHandler, filters
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -15,24 +14,28 @@ CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 if not TOKEN or not CHAT_ID:
     raise ValueError("Токен или chat_id не были найдены в .env файле!")
 
-async def start(update, context):
-    """Обработчик команды /start"""
-    await update.message.reply_text('Привет, мир!')
+async def handle_message(update, context):
+    """Обработчик текстовых сообщений: бот отправляет фотографию"""
+    photo_path = 'src/test_image.png'  # Путь к фотографии, которую будет отправлять бот
+    
+    print(f"Получено сообщение от {update.message.from_user.username}: {update.message.text}")
 
-async def main():
-    # Инициализируем асинхронного бота
+    # Отправляем фотографию в ответ на любое сообщение
+    await update.message.reply_photo(photo=open(photo_path, 'rb'))
+
+def main():
+    """Основная функция для запуска бота"""
+    print("Бот запускается...")
     application = Application.builder().token(TOKEN).build()
 
-    # Регистрируем обработчик команды /start
-    application.add_handler(CommandHandler("start", start))
+    # Регистрируем обработчик текстовых сообщений
+    application.add_handler(MessageHandler(filters.TEXT, handle_message))
 
-    # Отправляем сообщение
-    bot = Bot(token=TOKEN)
-    await bot.send_message(chat_id=CHAT_ID, text="Привет, мир!")
-
+    print("Бот слушает сообщения...")
     # Запускаем бота
-    await application.run_polling()
+    application.run_polling()
 
 # Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main())
+    print("Запуск бота...")
+    main()
